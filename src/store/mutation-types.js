@@ -1,0 +1,9 @@
+
+// mutation-type.js这个文件的目的是声明整个项目用于修改state方法有哪些
+export const SET_SINGER = 'SET_SINGER'
+export const SET_PLAYING_STATE = 'SET_PLAYING_STATE'
+export const SET_FULL_SCREEN = 'SET_FULL_SCREEN'
+export const SET_PLAYLIST = 'SET_PLAYLIST'
+export const SET_SEQUENCE_LIST = 'SET_SEQUENCE_LIST'
+export const SET_PLAY_MOOE = 'SET_PLAY_MOOE'
+export const SET_CURRENTINDEX = 'SET_CURRENTINDEX'
