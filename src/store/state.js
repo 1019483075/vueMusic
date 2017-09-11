@@ -5,8 +5,8 @@ const state = {// vuex集中式存储管理运用
   fullScreen: false,
   playList: [],
   sequenceList: [],
-  mode: playMode.sequence, //
-  currentIndex: -1
+  mode: playMode.sequence,
+  currentIndex: -1// 是指当前播放歌曲的索引
 
 }
 export default state
