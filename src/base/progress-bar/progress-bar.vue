@@ -47,13 +47,16 @@ export default {
       this.touch.initiated = false
       this._triggerPercent()
     },
-    progressClick(e) {
+    progressClick(e) { // 这里当我们点击progressbtn的时候e.offsetX
       // const rect = this.$refs.progressBar.getBoundingClientRect()
       // const offsetWidth = e.pageX - rect.left
       // this._offset(offsetWidth)
-      this._offset(e.offsetX)
+      // this._offset(e.offsetX)
+      const rect = this.$refs.progressBar.getBoundingClientRect()
+      const offsetWidth = e.pageX - rect.left
+      this._offset(offsetWidth)
       this._triggerPercent()
-      console.log(1)
+      // console.log(1)
     },
     _offset(offsetWidth) {
       this.$refs.progress.style.width = `${offsetWidth}px`

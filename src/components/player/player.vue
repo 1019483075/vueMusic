@@ -77,7 +77,7 @@
       </div>
       </transition>
       <!--下面添加audo音乐播放标签  src是指英语的播放地址-->
-      <audio ref="audio" :src="currentSong.url" @play='ready' @error="error"  @timeupdate="updateTime"></audio>
+      <audio ref="audio" :src="currentSong.url" @play='ready' @error="error"  @timeupdate="updateTime" @ended="end"></audio>
   </div>
 </template>
 
@@ -88,6 +88,7 @@ import {prefixStyle} from '../../common/js/dom'
 import progressBar from '../../base/progress-bar/progress-bar'
 import progressCircle from '../../base/progress-circle/progress-circle'
 import {playMode} from '../../common/js/config'
+import {shuffle} from '../../common/js/util'
 const transform = prefixStyle('transform')
 export default {
   name: 'player',
@@ -125,7 +126,8 @@ export default {
       'currentSong',
       'playing', // 对应SET_PLAYING_STATE通过this.playing 去获取当前的状态
       'currentIndex',
-      'mode'
+      'mode', // 这个是歌曲的播放模式，随机，循环，顺序
+      'sequenceList'
     ])
   },
   methods: {
@@ -175,9 +177,20 @@ export default {
       this.$refs.cdWrapper.style.transition = ''
       this.$refs.cdWrapper.style[transform] = ''
     },
+    end() { // 这个事件代表的是音乐播放结束后的一些操作   本身音频是没有这些操作的
+      if (this.mode === playMode.loop) {
+        this.loop()
+      } else {
+        this.next()
+      }
+    },
     // 定义音乐暂停播放的方法
     togglePlaying() {
       this.setPlayingState(!this.playing)// 这音乐取反的操作
+    },
+    loop() {
+      this.$refs.audio.currentIndex = 0
+      this.$refs.audio.play()
     },
     // 播放下首歌曲事件
     next() { // 阻止快速点击歌曲
@@ -243,9 +256,25 @@ export default {
       }
       return num
     },
-    changeMode() {
+    changeMode() { // 点击播放选择时的几种状态 只是样式修改
       const mode = (this.mode + 1) % 3
       this.setPlayMode(mode)
+      // 播放选择的逻辑书写
+      let list = ''
+      if (mode === playMode.random) {
+        list = shuffle(this.sequenceList)
+      } else {
+        list = this.sequenceList
+      }
+      this.resetCurrentIndex(list)
+      this.setPlaylist(list)
+    },
+    resetCurrentIndex(list) {
+      let index = list.findIndex((item) => {
+        return item.id === this.currentSong.id
+      })
+      // this.currentIndex(index)
+      this.setCurrentIndex(index)
     },
     // 2.封装一个函数去获取miniplay中小图片偏移的位置
     _getPosAndScale() {
@@ -267,11 +296,16 @@ export default {
       setFullScreen: 'SET_FULL_SCREEN',
       setPlayingState: 'SET_PLAYING_STATE',
       setCurrentIndex: 'SET_CURRENT_INDEX',
-      setPlayMode: 'SET_PLAY_MODE'
+      setPlayMode: 'SET_PLAY_MODE',
+      setPlaylist: 'SET_PLAYLIST'
+
     })
   },
   watch: {
-    currentSong() {
+    currentSong(newSong, oldSong) {
+      if (!newSong.id === oldSong.id) {
+        return
+      }
       // $nextTick()是指延时效果，当dom加载完毕在执行里面的内容
       this.$nextTick(() => {
         this.$refs.audio.play()
