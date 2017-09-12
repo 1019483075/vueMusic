@@ -12,7 +12,7 @@ import {createdSong} from '../../common/js/song'// 引入处理的数据
 import MusicList from '../../components/music-list/music-list'
 export default {
   name: 'singer-detail',
-  computed: {// 这个必须在singers之前
+  computed: {// 这个必须在singers之前 依赖的值发生变化会重新计算title
     title() {
       return this.singer.name
     },

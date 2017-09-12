@@ -31,13 +31,13 @@
             <div class="progress-wrapper">
               <span class="time time-l">{{format(currentTime)}}</span>
               <div class="progress-bar-wrapper">
-                <progress-bar :percent="percent"></progress-bar>
+                <progress-bar :percent="percent" @percentChange="percentBarChange"></progress-bar>
               </div>
               <span class="time time-r">{{format(currentSong.duration)}}</span>
             </div>
             <div class="operators">
-              <div class="icon i-left">
-                <i class="icon-sequence"></i>
+              <div class="icon i-left" @click="changeMode">
+                <i :class="iconMode"></i>
               </div>
               <div class="icon i-left" :class="disableCls">
                 <i @click="prev" class="icon-prev"></i>
@@ -66,7 +66,9 @@
         </div>
         <div class="control">
           <div class="progress-circle"><!--下面的click加一个stop的原因是因为父元素有open点击事件   子元素的点击事件会冒泡到父元素的点击事件 加stop是阻止冒泡事件-->
+             <progress-circle :radius="radius" :percent="percent"><!--bind是指对应一个变量，但是固定的值不需要绑定-->
               <i @click.stop="togglePlaying" class="icon-mini icon-play-mini" :class="miniIcon"></i>
+              </progress-circle>
           </div>
         </div>
         <div class="control">
@@ -84,13 +86,16 @@ import {mapGetters, mapMutations} from 'vuex'
 import animations from 'create-keyframe-animation'// 此插件是js关键帧动画
 import {prefixStyle} from '../../common/js/dom'
 import progressBar from '../../base/progress-bar/progress-bar'
+import progressCircle from '../../base/progress-circle/progress-circle'
+import {playMode} from '../../common/js/config'
 const transform = prefixStyle('transform')
 export default {
   name: 'player',
   data() {
     return {
       songReady: false,
-      currentTime: 0// 表示当前进度条的时间
+      currentTime: 0, // 表示当前进度条的时间
+      radius: 32
     }
   },
   computed: {
@@ -111,12 +116,16 @@ export default {
     disableCls() {
       return this.songReady ? '' : 'disable'
     },
+    iconMode() {
+      return this.mode === playMode.sequence ? 'icon-sequence' : this.mode === playMode.loop ? 'icon-loop' : 'icon-random'
+    },
     ...mapGetters([
       'fullScreen',
       'playList',
       'currentSong',
       'playing', // 对应SET_PLAYING_STATE通过this.playing 去获取当前的状态
-      'currentIndex'
+      'currentIndex',
+      'mode'
     ])
   },
   methods: {
@@ -209,15 +218,21 @@ export default {
       this.songReady = true
     },
     updateTime(e) { // currentTime是指返回音频或者是视频的当前播放的位置，秒数显示
-      this.currentTime = e.target.currentTime
-      console.log(this.currentTime)
+      this.currentTime = e.target.currentTime// 表示的是音乐当前播放的时间currentTime是audio的属性
+    // console.log(this.currentTime)
     },
     // 定义一个函数将时间抽转换成分和秒的形式
     format(interval) {
-      interval = interval | 0// 此处的方法类似于取整
+      interval = interval | 0// |0类似于向下取整
       const minute = interval / 60 | 0
       const second = this._pad(interval % 60)//
       return `${minute}:${second}`
+    },
+    percentBarChange(percent) {
+      this.$refs.audio.currentTime = this.currentSong.duration * percent
+      if (!this.playing) { // 此处的判断是指，当音乐为暂停的时候，点击进度条音乐会播放
+        this.togglePlaying()
+      }
     },
     // toString() 方法可把一个逻辑值转换为字符串，并返回结果。
     _pad(num, n = 2) {
@@ -227,6 +242,10 @@ export default {
         len++
       }
       return num
+    },
+    changeMode() {
+      const mode = (this.mode + 1) % 3
+      this.setPlayMode(mode)
     },
     // 2.封装一个函数去获取miniplay中小图片偏移的位置
     _getPosAndScale() {
@@ -247,7 +266,8 @@ export default {
     ...mapMutations({
       setFullScreen: 'SET_FULL_SCREEN',
       setPlayingState: 'SET_PLAYING_STATE',
-      setCurrentIndex: 'SET_CURRENT_INDEX'
+      setCurrentIndex: 'SET_CURRENT_INDEX',
+      setPlayMode: 'SET_PLAY_MODE'
     })
   },
   watch: {
@@ -265,7 +285,8 @@ export default {
     }
   },
   components: {
-    progressBar
+    progressBar,
+    progressCircle
   }
 }
 </script>
