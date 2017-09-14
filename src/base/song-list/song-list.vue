@@ -25,7 +25,7 @@ export default {
   },
   methods: {
     selectItem(item, index) {
-      this.$emit('select', item, index)
+      this.$emit('select', item, index)// 此组件是给父组件传值
     },
     getDesc(song) {
       return `${song.singer}·${song.album}`

@@ -357,15 +357,16 @@ export default {
       this.setCurrentIndex(index)
     },
     // 2.封装一个函数去获取miniplay中小图片偏移的位置
-    _getPosAndScale() {
+    _getPosAndScale() { // 获取大图片和小图片初始的位置和scale
       const targetWidth = 40// 小图片的宽度
       const paddingLeft = 40// 小图片距离左边的距离
       const padddingBottom = 30// 小图片距离下面的距离
       const paddingTop = 80// 大图片距离顶部的距离
       const width = window.innerWidth * 0.8// 大图片的宽度
       const scale = targetWidth / width
+      // innerWidth是指只读属性，声明了窗口的文档显示区的高度和宽度，以像素计。这里的宽度和高度不包括菜单栏、工具栏以及滚动条等的高度。
       const x = -(window.innerWidth / 2 - paddingLeft)// x抽是指大图片x中心的位置
-      const y = window.innerHeight - paddingTop - width / 2 - padddingBottom
+      const y = window.innerHeight - paddingTop - width / 2 - padddingBottom// 因为这个大图片是个圆形的所以大图片的宽高是一样的width / 2是指减掉2分之1的高度
       return {
         x,
         y,
