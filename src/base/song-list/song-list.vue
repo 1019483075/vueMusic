@@ -1,10 +1,10 @@
 <template><!--singer-detail中公共的list列表书写-->
   <div class="song-list">
     <ul>
-        <li @click="selectItem(song,index)" class="item" v-for="(song,index) in songs">
-            <div class="rank">
+        <li @click="selectItem(song,index)" class="item" v-for="(song,index) in songs"><!--派发点击事件-->
+            <!-- <div class="rank">
                 <span></span>
-            </div>
+            </div> -->
             <div class="content">
                 <h2 class="name">{{song.name}}</h2>
                 <p class="desc">{{getDesc(song)}}</p>

@@ -41,7 +41,7 @@ export default {
       getSingerDetail(this.singer.id).then((res) => { // 此处的数据虽然已经获取到了，但是不是我们需要的数据，所以要进行逻辑修改
         if (res.code === ERR_OK) {
           this.songs = this.__normalizeSongs(res.data.list)
-         // console.log(this.songs)
+          console.log(this.songs)
         }
       })
     },

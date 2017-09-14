@@ -1,12 +1,13 @@
 <template>
-  <div class="player" v-show="playList.length>0">
+  <div class="player" v-show="playList.length>0"><!--此处的playlist大于0 的目的是为了判断有数据的情况下才会显示-->
+    <!--此处是音乐播放的页面-->
      <transition name="normal"
      @enter="enter"
      @after-enter="afterEnter"
      @leave="leave"
      @after-leave="afterLeave"
      > 
-      <div class="normal-player" v-show="fullScreen">
+      <div class="normal-player" v-show="fullScreen"><!--这里的 显示隐藏依赖fullscreen-->
           <div class="background">
             <img  alt="" width="100%" height="100%" :src="currentSong.image">
           </div>
@@ -17,7 +18,11 @@
             <h1 class="title" v-html="currentSong.name"></h1>
             <h2 class="subtitle" v-html="currentSong.singer"></h2>
           </div>
-          <div class="middle">
+          <div class="middle"
+           @touchstart.prevent='middleTouchStart'
+           @touchmove.prevent='middleTouchMove'
+           @touchend.prevent='middleTouchEnd' 
+           >
             <div class="middle-l">
               <div class="cd-wrapper" ref="cdWrapper">
                 <div class="cd" :class="cdCls"><!--此处给一个cd图片的旋转事件 当音乐播放的时候cd图片旋转-->
@@ -25,8 +30,28 @@
                 </div>
               </div>
             </div>
+             <!--下面的代码添加的是歌词的样式-->
+          <scroll class="middle-r" ref="lyricList" 
+          :data="currentLyric&&currentLyric.lines">
+            <div class="lyric-wrapper">
+              <div v-if="currentLyric">
+                <p class="text" 
+                :class="{'current':currentLineNum===index}" 
+                ref="lyricLine" 
+                v-for="(line,index) in currentLyric.lines">
+                 {{line.txt}}
+                </p>
+              </div>
+            </div>
+          </scroll>
           </div>
+         
           <div class="bottom">
+            <!--歌词左右滑动的dots-->
+            <div class="dot-wrapper">
+              <span class="dot" :class="{'active':currentShow==='cd'}"></span>
+              <span class="dot" :class="{'active':currentShow==='lyric'}"></span>
+            </div>
             <!--音乐加载器进度条-->
             <div class="progress-wrapper">
               <span class="time time-l">{{format(currentTime)}}</span>
@@ -55,6 +80,7 @@
           </div>
       </div>
       </transition>
+      <!--此处是音乐播放的小dom-->
        <transition name="mini">
       <div class="mini-player" v-show="!fullScreen" @click="open">
         <div class="icon"><!--此处的cdcls也是添加音乐播放，图片旋转动画效果-->
@@ -89,6 +115,8 @@ import progressBar from '../../base/progress-bar/progress-bar'
 import progressCircle from '../../base/progress-circle/progress-circle'
 import {playMode} from '../../common/js/config'
 import {shuffle} from '../../common/js/util'
+import Scroll from '../../base/scroll/scroll'
+import Lyric from 'lyric-parser'
 const transform = prefixStyle('transform')
 export default {
   name: 'player',
@@ -96,10 +124,16 @@ export default {
     return {
       songReady: false,
       currentTime: 0, // 表示当前进度条的时间
-      radius: 32
+      radius: 32,
+      currentLyric: null,
+      currentLineNum: 0,
+      currentShow: 'cd'
     }
   },
   computed: {
+    created () {
+      this.touch = {}
+    },
     cdCls() {
       return this.playing ? 'play' : 'play pause'
     },
@@ -123,7 +157,7 @@ export default {
     ...mapGetters([
       'fullScreen',
       'playList',
-      'currentSong',
+      'currentSong', // 当前歌曲的所有信息
       'playing', // 对应SET_PLAYING_STATE通过this.playing 去获取当前的状态
       'currentIndex',
       'mode', // 这个是歌曲的播放模式，随机，循环，顺序
@@ -247,6 +281,52 @@ export default {
         this.togglePlaying()
       }
     },
+    //
+    getLyric() {
+      this.currentSong.getLyric().then((lyric) => {
+        // if (this.currentSong.lyric !== lyric) {
+        //   return
+        // }
+        this.currentLyric = new Lyric(lyric, this.handleLyric)
+        // console.log(this.currentLyric)
+        if (this.playing) {
+          this.currentLyric.play()
+        }
+      })
+    },
+    handleLyric({lineNum, txt}) {
+      this.currentLineNum = lineNum
+      // 操作歌词往上滚动的方法
+      if (lineNum > 5) {
+        let lineEl = this.$refs.lyricLine[lineNum - 5]
+        this.$refs.lyricList.scrollToElement(lineEl, 1000)
+      } else {
+        this.$refs.lyricList.scrollTo(0, 0, 1000)
+      }
+    },
+    middleTouchStart(e) {
+      this.touch.initiated = true
+      const touch = e.touches[0]
+      this.touch.startX = touch.pageX
+      this.touch.startY = touch.pageY
+    },
+    middleTouchMove(e) {
+      if (!this.touch.initiated) {
+        return
+      }
+      const touch = e.touches[0]
+      const deltaX = touch.pageX - this.touch.startX
+      const deltaY = touch.pageY - this.touch.startY
+      if (Math.abs(deltaY) > Math.abs(deltaX)) {
+        return
+      }
+      const left = this.currentShow === 'cd' ? 0 : -window.innerWidth
+      const width = Math.min(Math.max(-window.innerWidth, left + deltaX))
+      this.$refs.lyricList.$el.style[transform] = `translate3d(${width}px,0,0)`
+    },
+    middleTouchEnd(e) {
+
+    },
     // toString() 方法可把一个逻辑值转换为字符串，并返回结果。
     _pad(num, n = 2) {
       let len = num.toString().length
@@ -309,6 +389,9 @@ export default {
       // $nextTick()是指延时效果，当dom加载完毕在执行里面的内容
       this.$nextTick(() => {
         this.$refs.audio.play()
+        // 当音乐开启的时候去获取歌词
+      //  this.currentSong.getLyric()
+        this.getLyric()
       })
     },
     playing(newplaying) {
@@ -320,7 +403,8 @@ export default {
   },
   components: {
     progressBar,
-    progressCircle
+    progressCircle,
+    Scroll
   }
 }
 </script>
@@ -420,23 +504,23 @@ export default {
                   line-height :20px
                   font-size: $font-size-medium
                   color: $color-text-l
-              .middle-r
-                display :inline-block
-                vertical-align :top
-                width :100%
-                height :100%
-                overflow :hidden
-                .lyric-wrapper
-                  width :80%
-                  margin:0 auto
-                  overflow :hidden
-                  text-align :center
-                  .text
-                    line-height :32px
-                    color: $color-text-l
-                    font-size: $font-size-medium
-                    &.current
-                      color: $color-text
+          .middle-r
+            display :inline-block
+            vertical-align :top
+            width :100%
+            height :100%
+            overflow :hidden
+            .lyric-wrapper
+              width :80%
+              margin:0 auto
+              overflow :hidden
+              text-align :center
+              .text
+                line-height :32px
+                color: $color-text-l
+                font-size: $font-size-medium
+                &.current
+                  color: $color-text
         .bottom
           position :absolute
           bottom :50px
