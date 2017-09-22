@@ -92,6 +92,9 @@ export default {
       this._scrollTo(anchorIndex)
     //  this.$refs.listview.scrollToElement(this.$refs.listGroup[anchorIndex], 0)
     },
+    refresh() {
+      this.$refs.listview.refresh()
+    },
     onShortcutTouchMove(e) { // 1.此处是右侧的的列表滚动事件
       let firstTouch = e.touches[0]// 确实能保留所有触发点的事件对象
       this.touch.y2 = firstTouch.pageY//

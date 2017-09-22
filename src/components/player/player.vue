@@ -23,11 +23,14 @@
            @touchmove.prevent='middleTouchMove'
            @touchend.prevent='middleTouchEnd' 
            >
-            <div class="middle-l">
+            <div class="middle-l" ref="middleL"><!--此处的middleL是指为了加上一个渐隐的效果-->
               <div class="cd-wrapper" ref="cdWrapper">
                 <div class="cd" :class="cdCls"><!--此处给一个cd图片的旋转事件 当音乐播放的时候cd图片旋转-->
                   <img alt="" class="image" :src="currentSong.image">
                 </div>
+              </div>
+              <div class="playing-lyric-wrapper">
+                <div class="playing-lyric">{{playingLyric}}</div>
               </div>
             </div>
              <!--下面的代码添加的是歌词的样式-->
@@ -56,7 +59,7 @@
             <div class="progress-wrapper">
               <span class="time time-l">{{format(currentTime)}}</span>
               <div class="progress-bar-wrapper">
-                <progress-bar :percent="percent" @percentChange="percentBarChange"></progress-bar>
+                <progress-bar :percent="percent" @percentChange="onProgressBarChange"></progress-bar>
               </div>
               <span class="time time-r">{{format(currentSong.duration)}}</span>
             </div>
@@ -115,9 +118,10 @@ import progressBar from '../../base/progress-bar/progress-bar'
 import progressCircle from '../../base/progress-circle/progress-circle'
 import {playMode} from '../../common/js/config'
 import {shuffle} from '../../common/js/util'
-import Scroll from '../../base/scroll/scroll'
+import Scroll from '../../base/scroll/scroll'// 此处的scroll组件是指为了让歌词可以滚动而引用的
 import Lyric from 'lyric-parser'
 const transform = prefixStyle('transform')
+const transitionDuration = prefixStyle('transitionDuration')
 export default {
   name: 'player',
   data() {
@@ -127,13 +131,15 @@ export default {
       radius: 32,
       currentLyric: null,
       currentLineNum: 0,
-      currentShow: 'cd'
+      currentShow: 'cd',
+      playingLyric: ''
     }
   },
+  created() {
+    this.touch = {}
+  },
   computed: {
-    created () {
-      this.touch = {}
-    },
+
     cdCls() {
       return this.playing ? 'play' : 'play pause'
     },
@@ -144,14 +150,14 @@ export default {
       return this.playing ? 'icon-pause' : 'icon-play'
     },
     // percent的width
-    percent() { // 进度条的值
+    percent() { // 进度条的值  获取进度条的百分比   当前的时间去除以总时长
       return this.currentTime / this.currentSong.duration
     },
     // 添加一个按钮不能点击时的样式
     disableCls() {
       return this.songReady ? '' : 'disable'
     },
-    iconMode() {
+    iconMode() { // 播放模式的icon可以通过以下逻辑得到
       return this.mode === playMode.sequence ? 'icon-sequence' : this.mode === playMode.loop ? 'icon-loop' : 'icon-random'
     },
     ...mapGetters([
@@ -220,26 +226,40 @@ export default {
     },
     // 定义音乐暂停播放的方法
     togglePlaying() {
+      if (!this.songReady) {
+        return
+      }
       this.setPlayingState(!this.playing)// 这音乐取反的操作
+      if (this.currentLyric) { // 是指给歌曲添加togglePlay
+        this.currentLyric.togglePlay()
+      }
     },
     loop() {
-      this.$refs.audio.currentIndex = 0
-      this.$refs.audio.play()
+      this.$refs.audio.currentTime = 0// 当歌曲循环的时候，音频的时间设置为0
+      this.$refs.audio.play()// 对这个音频进行播放
+      if (this.currentLyric) {
+        this.currentLyric.seek()// 是指给歌曲重新开始
+      }
     },
     // 播放下首歌曲事件
     next() { // 阻止快速点击歌曲
       if (!this.songReady) {
         return
       }
-      let index = this.currentIndex + 1
+      // 判断如果palylist只有一首歌的时候就单曲循环
+      if (this.playList.length === 1) {
+        this.loop()
+      } else {
+        let index = this.currentIndex + 1
       // 判断当歌曲为最后一首歌的时候
-      if (index === this.playList.length) {
-        index = 0
-      }
-      this.setCurrentIndex(index)
+        if (index === this.playList.length) {
+          index = 0
+        }
+        this.setCurrentIndex(index)
       // 当音乐暂停的时候在点击播放下一首歌曲，音乐在播放但是icon图片是关闭的图片  所以要做逻辑判断
-      if (!this.playing) {
-        this.togglePlaying()
+        if (!this.playing) {
+          this.togglePlaying()
+        }
       }
       this.songReady = false
     },
@@ -248,13 +268,18 @@ export default {
       if (!this.songReady) {
         return
       }
-      let index = this.currentIndex - 1
-      if (index === -1) {
-        index = this.playList.length - 1
-      }
-      this.setCurrentIndex(index)
-      if (!this.playing) {
-        this.togglePlaying()
+      if (this.playList.length === 1) {
+        this.loop()
+      } else {
+        let index = this.currentIndex - 1
+        if (index === -1) {
+          index = this.playList.length - 1
+        }
+
+        this.setCurrentIndex(index)
+        if (!this.playing) {
+          this.togglePlaying()
+        }
       }
       this.songReady = false
     },
@@ -275,34 +300,41 @@ export default {
       const second = this._pad(interval % 60)//
       return `${minute}:${second}`
     },
-    percentBarChange(percent) {
-      this.$refs.audio.currentTime = this.currentSong.duration * percent
+    onProgressBarChange(percent) { // 当进度条的百分比发生变化的时候做处理
+      const currentTime = this.currentSong.duration * percent
+      this.$refs.audio.currentTime = currentTime
       if (!this.playing) { // 此处的判断是指，当音乐为暂停的时候，点击进度条音乐会播放
         this.togglePlaying()
+      }
+      if (this.currentLyric) {
+        this.currentLyric.seek(currentTime * 1000)
       }
     },
     //
     getLyric() {
       this.currentSong.getLyric().then((lyric) => {
-        // if (this.currentSong.lyric !== lyric) {
-        //   return
-        // }
         this.currentLyric = new Lyric(lyric, this.handleLyric)
         // console.log(this.currentLyric)
         if (this.playing) {
           this.currentLyric.play()
         }
+      }).catch(() => {
+        // playingLyric
+        this.currentLyric = null
+        this.playingLyric = ''
+        this.currentLineNum = 0
       })
     },
     handleLyric({lineNum, txt}) {
       this.currentLineNum = lineNum
       // 操作歌词往上滚动的方法
-      if (lineNum > 5) {
+      if (lineNum > 5) { // 此处的操作是指为了让歌词的显示始是在中间的
         let lineEl = this.$refs.lyricLine[lineNum - 5]
         this.$refs.lyricList.scrollToElement(lineEl, 1000)
       } else {
         this.$refs.lyricList.scrollTo(0, 0, 1000)
       }
+      this.playingLyric = txt// 此处的playingLyric只是在正常的情况下，正确的显示文字
     },
     middleTouchStart(e) {
       this.touch.initiated = true
@@ -317,15 +349,46 @@ export default {
       const touch = e.touches[0]
       const deltaX = touch.pageX - this.touch.startX
       const deltaY = touch.pageY - this.touch.startY
-      if (Math.abs(deltaY) > Math.abs(deltaX)) {
+      if (Math.abs(deltaY) > Math.abs(deltaX)) { // 是指纵轴滚动偏差的值大于横轴偏差滚动的值就不滚动
         return
       }
       const left = this.currentShow === 'cd' ? 0 : -window.innerWidth
-      const width = Math.min(Math.max(-window.innerWidth, left + deltaX))
-      this.$refs.lyricList.$el.style[transform] = `translate3d(${width}px,0,0)`
+      const offsetWidth = Math.min(0, Math.max(-window.innerWidth, left + deltaX))// 此处的math.min是指设置一个负值只能在0与负数之间
+      this.touch.percent = Math.abs(offsetWidth / window.innerWidth)
+      this.$refs.lyricList.$el.style[transform] = `translate3d(${offsetWidth}px,0,0)`
+      this.$refs.lyricList.$el.style[transitionDuration] = 0
+      this.$refs.middleL.style.opacity = 1 - this.touch.percent// 此处是指percent越大的话透明度就越小   当percent越小的时候透明度就越大
+      this.$refs.middleL.style[transitionDuration] = 0
     },
-    middleTouchEnd(e) {
-
+    middleTouchEnd(e) { // touchend是指用来决定到底是停在那个位置
+      // 为了更好的体验，一直是从右往左滑，一种是从左往右滑
+      let offsetWidth
+      let opacity
+      if (this.currentShow === 'cd') {
+        if (this.touch.percent > 0.1) {
+          offsetWidth = -window.innerWidth
+          opacity = 0
+          this.currentShow = 'lyric'
+        } else {
+          offsetWidth = 0
+          opacity = 1
+        }
+      } else {
+        if (this.touch.percent < 0.9) {
+          offsetWidth = 0
+          this.currentShow = 'cd'
+          opacity = 1
+        } else {
+          offsetWidth = -window.innerWidth
+          opacity = 0
+        }
+      }
+      const time = 300
+      this.$refs.lyricList.$el.style[transform] = `translate3d(${offsetWidth}px,0,0)`
+      // 给歌词从右往左移动的时候添加动画效果
+      this.$refs.lyricList.$el.style[transitionDuration] = `${time}ms`
+      this.$refs.middleL.style.opacity = opacity// 此处是指percent越大的话透明度就越小   当percent越小的时候透明度就越大
+      this.$refs.middleL.style[transitionDuration] = `${time}ms`
     },
     // toString() 方法可把一个逻辑值转换为字符串，并返回结果。
     _pad(num, n = 2) {
@@ -337,7 +400,7 @@ export default {
       return num
     },
     changeMode() { // 点击播放选择时的几种状态 只是样式修改
-      const mode = (this.mode + 1) % 3
+      const mode = (this.mode + 1) % 3// 此处的余数是指一个数除以另一个数的余数
       this.setPlayMode(mode)
       // 播放选择的逻辑书写
       let list = ''
@@ -387,13 +450,22 @@ export default {
       if (!newSong.id === oldSong.id) {
         return
       }
+      if (this.currentLyric) { // 此处的目的是指为了在调用getLyric之前将他清空
+        this.currentLyric.stop()
+      }
       // $nextTick()是指延时效果，当dom加载完毕在执行里面的内容
-      this.$nextTick(() => {
+      // this.$nextTick(() => {
+      //   this.$refs.audio.play()
+      //   // 当音乐开启的时候去获取歌词
+      // //  this.currentSong.getLyric()
+      //   this.getLyric()
+      // })
+      setTimeout(() => { // 歌曲重新播放功能
         this.$refs.audio.play()
         // 当音乐开启的时候去获取歌词
       //  this.currentSong.getLyric()
         this.getLyric()
-      })
+      }, 1000)
     },
     playing(newplaying) {
       const audio = this.$refs.audio

@@ -16,12 +16,12 @@
 <script>
 import {prefixStyle} from '../../common/js/dom'// 此处是获取transfrom的值
 const progressWidth = 10// 此处是按钮的宽度
-const progressBtnWidth = 16
+const progressBtnWidth = 16//
 const transform = prefixStyle('transform')
 export default {
   name: 'progress-bar',
   props: {
-    percent: {
+    percent: {// 此处是指计算进度条的百分比
       type: Number,
       default: 0
     }
@@ -32,16 +32,16 @@ export default {
   methods: {
     progressTouchStart(e) {
       this.touch.initiated = true
-      this.touch.startX = e.touches[0].pageX// 此处是指横向坐标
-      this.touch.left = this.$refs.progress.clientWidth
+      this.touch.startX = e.touches[0].pageX// 刚开始点击的横向坐标
+      this.touch.left = this.$refs.progress.clientWidth// 获取滚动条的初始位置
     },
     progressTouchMove(e) {
       if (!this.touch.initiated) {
         return
       }
-      const deltaX = e.touches[0].pageX - this.touch.startX
+      const deltaX = e.touches[0].pageX - this.touch.startX// x抽的位置
       const offsetWidth = Math.min(this.$refs.progressBar.clientWidth - progressBtnWidth, Math.max(0, this.touch.left + deltaX))
-      this._offset(offsetWidth)
+      this._offset(offsetWidth)// Math.min(整个滚动条的位置)- Math.max（音乐播放的位置+滚定的位置）  //此处的Math.min是指两个值中返回最小值
     },
     progressTouchEnd(e) {
       this.touch.initiated = false
@@ -51,21 +51,21 @@ export default {
       // const rect = this.$refs.progressBar.getBoundingClientRect()
       // const offsetWidth = e.pageX - rect.left
       // this._offset(offsetWidth)
-      // this._offset(e.offsetX)
-      const rect = this.$refs.progressBar.getBoundingClientRect()
+      // this._offset(e.offsetX)//相对当前坐标系的border左上角开始的坐标
+      const rect = this.$refs.progressBar.getBoundingClientRect()// getBoundingClientRect用于获取莫个元素相对于视窗的位置集合
       const offsetWidth = e.pageX - rect.left
       this._offset(offsetWidth)
       this._triggerPercent()
       // console.log(1)
     },
-    _offset(offsetWidth) {
-      this.$refs.progress.style.width = `${offsetWidth}px`
-      this.$refs.progressBtn.style[transform] = `translate3d(${offsetWidth}px,0,0)`
+    _offset(offsetWidth) { // 此处是封装的方法
+      this.$refs.progress.style.width = `${offsetWidth}px`// 进度条的偏移位置
+      this.$refs.progressBtn.style[transform] = `translate3d(${offsetWidth}px,0,0)`// 滚动条的偏移位置
     },
-    _triggerPercent() {
+    _triggerPercent() { // 告诉外面拖动了多少
       const barWidth = this.$refs.progressBar.clientWidth - progressWidth
       const percent = this.$refs.progress.clientWidth / barWidth
-      this.$emit('percentChange', percent)
+      this.$emit('percentChange', percent)// 高度拖动完成
     }
 
   },
@@ -75,6 +75,8 @@ export default {
       if (newPercent >= 0 && !this.touch.initiated) {
         const barWidth = this.$refs.progressBar.clientWidth - progressWidth// 计算整个滚动条的宽度 此处是进度条的宽度减去小球按钮的宽度
         const offsetWidth = newPercent * barWidth
+       // this.$refs.progress.style.width = `${offsetWidth}px`//此处就是进度条变化的偏移量
+       // this.$refs.progressBtn.style[transform] = `translate3d(${offsetWidth}px,0,0)`//此处是小球的偏移量
         this._offset(offsetWidth)
       }
     }

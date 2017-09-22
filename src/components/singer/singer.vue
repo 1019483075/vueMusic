@@ -1,7 +1,7 @@
 <template>
-  <div class="singer"><!--一下是引入组件-->
+  <div class="singer" ref="singer"><!--一下是引入组件-->
       <!--在父组件的子标签中监听改自定义事件并且添加一个响应改事件的处理方法-->
-      <list-view :data='singers' @select="selectSinger"></list-view><!--data  是指父组件给子组件传值，子组件用于接受父组件传递的东西-->
+      <list-view :data='singers' @select="selectSinger" ref="list"></list-view><!--data  是指父组件给子组件传值，子组件用于接受父组件传递的东西-->
        <router-view></router-view>
   </div>
 </template>
@@ -11,12 +11,14 @@ import listView from '../../base/listview/listview'
 import {getSingerList} from '../../api/singer'
 import {ERR_OK} from '../../api/config'
 import Singer from '../../common/js/singer'
+import {playlistMixin} from '../../common/js/mixin'
 // 获取vuex的语法糖
 import {mapMutations} from 'vuex'// mapMutation就是对mutation的封装
 const HOT_SINGER_LEN = 10
 const HOT_NAME = '热门'
 export default {
   name: 'singer',
+  mixins: [playlistMixin],
   data() {
     return {
       singers: []
@@ -26,6 +28,11 @@ export default {
     this._getSingerList()
   },
   methods: {
+    handlePlaylist(playList) {
+      const bottom = playList.length > 0 ? '60px' : ''
+      this.$refs.singer.style.bottom = bottom
+      this.$refs.list.refresh()
+    },
     selectSinger(singer) {
      // console.log(singer)
       this.$router.push({// router.push等同于router-link  这个方法会向history添加一个新的记录，所以当用户点击浏览器后退按钮时，则回到之前的URL

@@ -1,5 +1,5 @@
 <template>
-    <div class="reaconmend">
+    <div class="reaconmend" ref="reaconmend">
         <scroll ref="scroll" class="reaconmend-content" :data="discList">
             <div>
                 <div class="slider-wrapper" v-if="recommends.length"><!--recommends.length确保recmmend这个值是有的时候在去加载 -->
@@ -39,8 +39,10 @@ import Scroll from '../../base/scroll/scroll'
 import Slider from '../../base/slider/slider'
 import {getReaconmend, getDiscList} from '../../api/reaconmend'
 import {ERR_OK} from '../../api/config'
+import {playlistMixin} from '../../common/js/mixin'
 export default {
   name: 'reaconmend',
+  mixins: [playlistMixin],
   data() {
     return {
       recommends: [],
@@ -58,6 +60,11 @@ export default {
     this._getDiscList()
   },
   methods: {
+    handlePlaylist(playList) {
+      const bottom = playList.length > 0 ? '60px' : ''
+      this.$refs.reaconmend.style.bottom = bottom
+      this.$refs.scroll.refresh()
+    },
     loadImage() {
       if (!this.checkLoaded) {
        // this.$refs.scroll.refesh()
