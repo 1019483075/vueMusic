@@ -7,6 +7,7 @@ import Rank from '../components/rank/rank.vue'
 import Search from '../components/search/search.vue'
 
 import SingerDetail from '../components/singer-detail/singer-detail.vue'
+import Disc from '../components/disc/disc.vue'// 此处是推荐列表跳转的内容页面   此处的页面是类似于歌手详情页的组件的
 Vue.use(Router)
 
 export default new Router({
@@ -17,7 +18,13 @@ export default new Router({
     },
     {
       path: '/reaconmend',
-      component: Reaconmend
+      component: Reaconmend,
+      children: [// 此处是子路由  里面是存放数组的
+        {
+          path: ':id', // 此组件是个子路由
+          component: Disc
+        }
+      ]
     },
     {
       path: '/singer',

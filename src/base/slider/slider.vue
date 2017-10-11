@@ -1,7 +1,7 @@
 <template>
   <div class="slider" ref="slider"><!--ref相当于一个id方便获取-->
       <div class="slider-grop" ref="sliderGroup">
-          <slot></slot>
+          <slot></slot><!--slider插槽是指里面可以放很多内容-->
       </div>
       <div class="dots">
           <span class="dot" v-for="(item,index) in dots" :class="{active:currentPageIndex===index}"></span>

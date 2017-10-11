@@ -14,7 +14,7 @@
                 <div class="reaconmend-list">
                     <h1 class="list-title">热门歌单推荐</h1>
                     <ul>
-                        <li v-for="item in discList" class="item">
+                        <li @click="selectItem(item)" v-for="item in discList" class="item">
                             <div class="icon">
                                 <img v-lazy="item.imgurl" alt="" width="60px" height="60px">
                             </div>
@@ -30,6 +30,7 @@
                 <loading></loading>
             </div><!--意思是指当没有discList数据的时候就回去显示-->
         </scroll>
+        <router-view></router-view>
     </div>
 </template>
 
@@ -40,6 +41,7 @@ import Slider from '../../base/slider/slider'
 import {getReaconmend, getDiscList} from '../../api/reaconmend'
 import {ERR_OK} from '../../api/config'
 import {playlistMixin} from '../../common/js/mixin'
+import {mapMutations} from 'vuex'
 export default {
   name: 'reaconmend',
   mixins: [playlistMixin],
@@ -65,6 +67,12 @@ export default {
       this.$refs.reaconmend.style.bottom = bottom
       this.$refs.scroll.refresh()
     },
+    selectItem(item) {
+      this.$router.push({
+        path: `/reaconmend/${item.dissid}`// reaconmend是指跳转的地址  注意不能吧跳转的地址写错
+      })
+      this.setDisc(item)
+    },
     loadImage() {
       if (!this.checkLoaded) {
        // this.$refs.scroll.refesh()
@@ -86,8 +94,10 @@ export default {
           this.discList = res.data.list
         }
       })
-    }
-
+    },
+    ...mapMutations({
+      setDisc: 'SET_DISC'
+    })
   },
   components: {
     Slider,
