@@ -62,11 +62,10 @@ export default {
     this._getDiscList()
   },
   methods: {
-    handlePlaylist(playlist) {
-      const bottom = playlist.length > 0 ? '60px' : ''
-
-      this.$refs.rank.style.bottom = bottom
-      this.$refs.toplist.refresh()
+    handlePlaylist(playList) {
+      const bottom = playList.length > 0 ? '60px' : ''
+      this.$refs.reaconmend.style.bottom = bottom
+      this.$refs.scroll.refresh()
     },
     selectItem(item) {
       this.$router.push({

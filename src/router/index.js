@@ -8,6 +8,7 @@ import Search from '../components/search/search.vue'
 
 import SingerDetail from '../components/singer-detail/singer-detail.vue'
 import Disc from '../components/disc/disc.vue'// 此处是推荐列表跳转的内容页面   此处的页面是类似于歌手详情页的组件的
+import TopList from '../components/top-list/top-list.vue'
 Vue.use(Router)
 
 export default new Router({
@@ -38,7 +39,13 @@ export default new Router({
     },
     {
       path: '/rank',
-      component: Rank
+      component: Rank,
+      children: [
+        {
+          path: ':id',
+          component: TopList
+        }
+      ]
     },
     {
       path: '/search',

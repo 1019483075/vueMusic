@@ -2,7 +2,7 @@
   <div class="rank" ref="rank"><!--设置滚动的属性-->
     <scroll :data="topList" class="toplist" ref="toplist">
       <ul>
-        <li class="item" v-for="item in topList">
+        <li class="item" v-for="item in topList" @click="selectItem(item)">
           <div class="icon">
             <img width="100" height="100" v-lazy="item.picUrl"/>
           </div>
@@ -43,10 +43,15 @@ export default {
     this._getTopList()
   },
   methods: {
-    handlePlayList(playList) {
-      const bottom = playList.length > 0 ? '60px' : ''
+    handlePlaylist(playlist) {
+      const bottom = playlist.length > 0 ? '60px' : ''
       this.$refs.rank.style.bottom = bottom
       this.$refs.toplist.refresh()// 刚发生变化的时候就刷新
+    },
+    selectItem(item) {
+      this.$router.push({
+        path: `/rank/${item.id}`
+      })
     },
     _getTopList() {
       getTopList().then((res) => {
