@@ -8,6 +8,7 @@ const state = {// vuex集中式存储管理运用
   mode: playMode.sequence, // 此处是指音乐的播放模式
   currentIndex: -1, // 是指当前歌曲在播放列表中的索引值
   // 此处是disc的state
-  disc: {}
+  disc: {},
+  topList: {}
 }
 export default state

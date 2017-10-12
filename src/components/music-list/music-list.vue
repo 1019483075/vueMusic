@@ -22,7 +22,7 @@
       :listen-scroll="listenScroll"
       ref="list"><!--封装好的scroll组件-->
         <div class="song-list-wrapper">
-            <song-list :songs="songs"  @select="selectItem" ></song-list>
+            <song-list :rank="rank" :songs="songs"  @select="selectItem" ></song-list>
         </div>
         <div class="loading-container" v-show="songs.length"></div>
       </scroll>
@@ -55,6 +55,10 @@ export default {
     title: {
       type: String,
       default: ''
+    },
+    rank: {
+      type: Boolean,
+      default: false
     }
   },
   data() {

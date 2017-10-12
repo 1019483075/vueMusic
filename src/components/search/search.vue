@@ -1,15 +1,23 @@
 <template>
   <div class="search">
-      search
+      <div class="search-box-wrapper">
+
+      </div>
   </div>
 </template>
 
 <script>
+import SearchBox from '../../base/search-box'
 export default {
-  name: 'search'
+  name: 'search',
+  components: {
+    SearchBox
+  }
 }
 </script>
 
-<style>
+<style lang="stylus" rel="stylesheet/stylus" scoped="scoped">
+@import "~common/stylus/variable"
+@import "~common/stylus/mixin"
   
 </style>

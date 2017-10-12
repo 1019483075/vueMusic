@@ -18,6 +18,8 @@
         <loading></loading>
       </div>
       </scroll>
+      <router-view></router-view>
+
   </div>
 </template>
 
@@ -27,6 +29,7 @@ import {getTopList} from '../../api/rank'
 import {ERR_OK} from '../../api/config'
 import Loading from '../../base/loading/loading'
 import {playlistMixin} from '../../common/js/mixin'
+import {mapMutations} from 'vuex'
 export default {
   name: 'rank',
   mixins: [playlistMixin],
@@ -52,6 +55,7 @@ export default {
       this.$router.push({
         path: `/rank/${item.id}`
       })
+      this.setTopList(item)
     },
     _getTopList() {
       getTopList().then((res) => {
@@ -60,8 +64,12 @@ export default {
           // console.log(this.topList)
         }
       })
-    }
+    },
+    ...mapMutations({
+      setTopList: 'SET_TOP_LIST'
+    })
   },
+
   components: {
     Scroll,
     Loading
