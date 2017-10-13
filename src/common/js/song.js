@@ -42,7 +42,7 @@ export function createdSong(musicData) {
     url: `http://ws.stream.qqmusic.qq.com/${musicData.songid}.m4a?fromtag=46`
   })
 }
-function filterSinger(singer) { // 处理下singer的数据
+export function filterSinger(singer) { // 处理下singer的数据
   let ret = []
   if (!singer) {
     return ''

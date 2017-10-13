@@ -3,13 +3,13 @@
     <ul class="suggest-list">
       <li class="suggest-item" v-for="item in result">
         <div class="icon">
-          <i :class="getIconCls"></i>
+          <i :class="getIconCls(item)"></i>
         </div>
         <div class="name">
           <p class="text" v-html="getDisplayName(item)"></p>
         </div>
       </li>
-      <loading></loading>
+      <!-- <loading></loading> -->
     </ul>
     <div class="no-result-wrapper"></div>
   </div>
@@ -18,8 +18,9 @@
 <script>
 import {search} from '../../api/search'
 import {ERR_OK} from '../../api/config'
+import {createSong} from '../../common/js/song'
+
 const TYPE_SINGER = 'singer'
-import {filterSinger} from '../../common/js/song'
 export default {
   name: 'suggest',
   // 此组件是依赖于检索词的
@@ -28,7 +29,7 @@ export default {
       type: String,
       default: ''
     },
-    showSinger: {// 是否显示歌手
+    showSinger: {// 是否显示歌手   默认是显示歌手的
       type: Boolean,
       default: true
     }
@@ -40,11 +41,14 @@ export default {
     }
   },
   methods: {
-    search() {
+    refresh() {
+      this.$refs.suggest.refresh()
+    },
+    search() { // 请求服务端，抓取检索数据
       search(this.query, this.page, this.showSinger).then((res) => {
         if (res.code === ERR_OK) {
           this.result = this._genResult(res.data)
-          console.log(res.data)
+          console.log(this.result)
         }
       })
     },
@@ -54,16 +58,18 @@ export default {
         ret.push({...data.zhida, ...{type: TYPE_SINGER}})
       }
       if (data.song) {
-        ret = ret.concat(data.song.list)
+        ret = ret.concat(this._normalizeSongs(data.song.list))
       }
       return ret
     },
-    getIconCls(item) {
-      if (item.type === TYPE_SINGER) {
-        return 'icon-mine'
-      } else {
-        return 'icon-music'
-      }
+    _normalizeSongs(list) {
+      let ret = []
+      list.forEach((musicData) => {
+        if (musicData.songid && musicData.albummid) {
+          ret.push(createSong(musicData))
+        }
+      })
+      return ret
     },
     getDisplayName(item) {
       if (item.type === TYPE_SINGER) {
@@ -71,9 +77,16 @@ export default {
       } else {
         return `${item.name}-${item.singer}`
       }
+    },
+    getIconCls(item) {
+      if (item.type === TYPE_SINGER) {
+        return 'icon-mine'
+      } else {
+        return 'icon-music'
+      }
     }
   },
-  watch: {
+  watch: {// 监听query的变化
     query() {
       this.search()
     }

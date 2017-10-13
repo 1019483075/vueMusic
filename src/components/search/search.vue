@@ -1,9 +1,9 @@
 <template>
   <div class="search">
       <div class="search-box-wrapper">
-        <search-box ref="searchBox"></search-box><!--此处是搜索框的子组件-->
+        <search-box ref="searchBox" @query="onQueryChange"></search-box><!--此处是搜索框的子组件-->
       </div>
-      <div class="shortcut-wrapper">
+      <div class="shortcut-wrapper"v-show="!query">
         <div class="shortcut">
           <div>
             <div class="hot-key">
@@ -17,6 +17,9 @@
           </div>
         </div>
       </div>
+      <div class="search-result">
+          <suggest :query="query" ></suggest>
+      </div>
   </div>
 </template>
 
@@ -24,6 +27,7 @@
 import SearchBox from '../../base/search-box/search-box'
 import {getHotKey} from '../../api/search'
 import {ERR_OK} from '../../api/config'
+import Suggest from '../../components/suggest/suggest'
 export default {
   name: 'search',
   created() {
@@ -31,7 +35,8 @@ export default {
   },
   data() {
     return {
-      hotKet: []
+      hotKet: [],
+      query: ''
     }
   },
   methods: {// 此处是点击热门搜索value值会出现在search框内
@@ -45,10 +50,14 @@ export default {
           // console.log(res.data.hotkey)
         }
       })
+    },
+    onQueryChange(query) {
+      this.query = query
     }
   },
   components: {
-    SearchBox
+    SearchBox,
+    Suggest
   }
 }
 </script>
@@ -81,4 +90,25 @@ export default {
             background: $color-highlight-background
             font-size: $font-size-medium
             color: $color-text-d
+        .search-history
+          position :relative
+          margin:0 20px
+          .title
+            display :flex
+            align-items :center
+            height :40px
+            font-size: $font-size-medium
+            color: $color-text-l
+            .text
+              flex :1
+            .clear
+               extend-click()
+              .icon-clear
+                font-size: $font-size-medium
+                color: $color-text-d
+    .search-result
+      position :fixed
+      width :100%
+      top:178px
+      bottom :0
 </style>
