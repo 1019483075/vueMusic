@@ -18,7 +18,7 @@
 <script>
 import {search} from '../../api/search'
 import {ERR_OK} from '../../api/config'
-import {createSong} from '../../common/js/song'
+import {createdSong} from '../../common/js/song'
 
 const TYPE_SINGER = 'singer'
 export default {
@@ -52,6 +52,20 @@ export default {
         }
       })
     },
+    getDisplayName(item) {
+      if (item.type === TYPE_SINGER) {
+        return item.singername
+      } else {
+        return `${item.name}-${item.singer}`
+      }
+    },
+    getIconCls(item) {
+      if (item.type === TYPE_SINGER) {
+        return 'icon-mine'
+      } else {
+        return 'icon-music'
+      }
+    },
     _genResult(data) {
       let ret = []
       if (data.zhida && data.zhida.singerid) {
@@ -66,25 +80,12 @@ export default {
       let ret = []
       list.forEach((musicData) => {
         if (musicData.songid && musicData.albummid) {
-          ret.push(createSong(musicData))
+          ret.push(createdSong(musicData))
         }
       })
       return ret
-    },
-    getDisplayName(item) {
-      if (item.type === TYPE_SINGER) {
-        return item.singername
-      } else {
-        return `${item.name}-${item.singer}`
-      }
-    },
-    getIconCls(item) {
-      if (item.type === TYPE_SINGER) {
-        return 'icon-mine'
-      } else {
-        return 'icon-music'
-      }
     }
+
   },
   watch: {// 监听query的变化
     query() {
