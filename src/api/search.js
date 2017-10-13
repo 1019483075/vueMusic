@@ -12,13 +12,13 @@ export function getHotKey() {
   return jsonp(url, data, options)
 }
 // 此处是检索的接口获取
-export function search(query, page, zhida) { // 此方法会接受3个参数    query热门搜索，page是上拉刷新的时候页数会发生变化，zhida是指要不要检索歌手
+export function search(query, page, zhida, perpage) { // 此方法会接受3个参数    query热门搜索，page是上拉刷新的时候页数会发生变化，zhida是指要不要检索歌手
   const url = 'https://c.y.qq.com/soso/fcgi-bin/search_for_qq_cp'
   const data = Object.assign({}, commonParams, {
     w: query,
     p: page,
-    // perpage,
-    // n: perpage,
+    perpage,
+    n: perpage,
     catZhida: zhida ? 1 : 0,
     zhidaqu: 1,
     t: 0,

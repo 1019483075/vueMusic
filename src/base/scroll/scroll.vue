@@ -24,6 +24,10 @@ export default {
     listenScroll: {//
       type: Boolean,
       default: false
+    },
+    pullup: {// 检索页的上拉刷新功能，用prop传递
+      type: Boolean,
+      default: false
     }
   },
   mounted() {
@@ -44,6 +48,13 @@ export default {
         let me = this
         this.scroll.on('scroll', (pos) => { // $emit监听当前实例上的自定义事件
           me.$emit('scroll', pos)
+        })
+      }
+      if (this.pullup) { // scroll.on是监听莫个动作  然后在suggest里面监听这个
+        this.scroll.on('scrollEnd', () => { // scrollEnd是表示停止  scrollToEnd是表示滚动到底部
+          if (this.scroll.y <= (this.scroll.maxScrollY + 50)) {
+            this.$emit('scrollToEnd')
+          }
         })
       }
     },

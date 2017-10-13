@@ -1,5 +1,8 @@
 <template>
-  <div class="suggest"><!--此处是搜索检索的列表页面-->
+  <scroll class="suggest" 
+  :data="result" 
+  @scrollToEnd="searchMore"
+  :pullup="pullup"><!--此处是搜索检索的列表页面   添加滚动的效果-->
     <ul class="suggest-list">
       <li class="suggest-item" v-for="item in result">
         <div class="icon">
@@ -9,18 +12,21 @@
           <p class="text" v-html="getDisplayName(item)"></p>
         </div>
       </li>
-      <!-- <loading></loading> -->
+      <loading v-show="hasMore" title=""></loading><!--上拉加载时候的loading事件-->
     </ul>
     <div class="no-result-wrapper"></div>
-  </div>
+  </scroll>
 </template>
 
 <script>
 import {search} from '../../api/search'
 import {ERR_OK} from '../../api/config'
 import {createdSong} from '../../common/js/song'
-
+import Scroll from '../../base/scroll/scroll'
+import Loading from '../../base/loading/loading'
 const TYPE_SINGER = 'singer'
+const perpage = 20
+
 export default {
   name: 'suggest',
   // 此组件是依赖于检索词的
@@ -37,7 +43,9 @@ export default {
   data() {
     return {
       page: 1, // 页数
-      result: []// 用于接受数据
+      result: [], // 用于接受数据
+      pullup: true, // 是否上拉刷新
+      hasMore: true
     }
   },
   methods: {
@@ -45,10 +53,12 @@ export default {
       this.$refs.suggest.refresh()
     },
     search() { // 请求服务端，抓取检索数据
-      search(this.query, this.page, this.showSinger).then((res) => {
+      this.hasMore = true
+      search(this.query, this.page, this.showSinger, perpage).then((res) => {
         if (res.code === ERR_OK) {
           this.result = this._genResult(res.data)
           console.log(this.result)
+          this._checkMore(res.data)
         }
       })
     },
@@ -84,13 +94,36 @@ export default {
         }
       })
       return ret
+    },
+    searchMore() { // 上拉刷新事件   调取接口 加载数据 并且每次只调用20条数据
+      if (!this.hasMore) {
+        return
+      }
+      this.page++
+      search(this.query, this.page, this.showSinger, perpage).then((res) => {
+        if (res.code === ERR_OK) {
+          this.result = this.result.concat(this._genResult(res.data))
+          this._checkMore(res.data)
+        }
+      })
+    },
+    _checkMore(data) {
+      const song = data.song
+      if (!song.list.length || (song.curnum + song.curpage * perpage) > song.totalnum) {
+        this.hasMore = false
+      }
     }
 
   },
+
   watch: {// 监听query的变化
     query() {
       this.search()
     }
+  },
+  components: {
+    Scroll,
+    Loading
   }
 
 }
