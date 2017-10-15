@@ -28,6 +28,10 @@ export default {
     pullup: {// 检索页的上拉刷新功能，用prop传递
       type: Boolean,
       default: false
+    },
+    beforScroll: {
+      type: Boolean,
+      default: false
     }
   },
   mounted() {
@@ -55,6 +59,11 @@ export default {
           if (this.scroll.y <= (this.scroll.maxScrollY + 50)) {
             this.$emit('scrollToEnd')
           }
+        })
+      }
+      if (this.beforScroll) {
+        this.scroll.on('beforScrollStart', () => {
+          this.$emit('beforScroll')
         })
       }
     },

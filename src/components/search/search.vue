@@ -3,7 +3,7 @@
       <div class="search-box-wrapper">
         <search-box ref="searchBox" @query="onQueryChange"></search-box><!--此处是搜索框的子组件-->
       </div>
-      <div class="shortcut-wrapper"v-show="!query">
+      <div class="shortcut-wrapper" v-show="!query">
         <div class="shortcut">
           <div>
             <div class="hot-key">
@@ -17,9 +17,10 @@
           </div>
         </div>
       </div>
-      <div class="search-result">
-          <suggest :query="query" ></suggest>
+      <div class="search-result" v-show="query" >
+          <suggest @listScroll="blurInput" :query="query" ></suggest>
       </div>
+      <router-view></router-view><!--此处是一个2级路由  当点击检索列表时就跳转到此路由-->
   </div>
 </template>
 
@@ -53,6 +54,9 @@ export default {
     },
     onQueryChange(query) {
       this.query = query
+    },
+    blurInput() {
+      this.$refs.searchBox.blur()
     }
   },
   components: {
