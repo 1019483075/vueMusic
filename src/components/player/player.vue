@@ -100,11 +100,12 @@
               </progress-circle>
           </div>
         </div>
-        <div class="control">
+        <div class="control" @click.stop="showPlayList()">
           <i class="icon-playlist"></i>
         </div>
       </div>
       </transition>
+      <play-list ref="playList"></play-list>
       <!--下面添加audo音乐播放标签  src是指英语的播放地址-->
       <audio ref="audio" :src="currentSong.url" @play='ready' @error="error"  @timeupdate="updateTime" @ended="end"></audio>
   </div>
@@ -120,6 +121,8 @@ import {playMode} from '../../common/js/config'
 import {shuffle} from '../../common/js/util'
 import Scroll from '../../base/scroll/scroll'// 此处的scroll组件是指为了让歌词可以滚动而引用的
 import Lyric from 'lyric-parser'
+// 添加playlist组件
+import PlayList from '../../components/playlist/playlist'
 const transform = prefixStyle('transform')
 const transitionDuration = prefixStyle('transitionDuration')
 export default {
@@ -412,6 +415,9 @@ export default {
       this.resetCurrentIndex(list)
       this.setPlaylist(list)
     },
+    showPlayList() { // 控制添加页的显示与隐藏
+      this.$refs.playList.show()
+    },
     resetCurrentIndex(list) {
       let index = list.findIndex((item) => {
         return item.id === this.currentSong.id
@@ -477,7 +483,8 @@ export default {
   components: {
     progressBar,
     progressCircle,
-    Scroll
+    Scroll,
+    PlayList
   }
 }
 </script>

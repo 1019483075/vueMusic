@@ -3,8 +3,8 @@
       <div class="search-box-wrapper">
         <search-box ref="searchBox" @query="onQueryChange"></search-box><!--此处是搜索框的子组件-->
       </div>
-      <div class="shortcut-wrapper" v-show="!query">
-        <div class="shortcut">
+      <div ref="shortcutWrapper" class="shortcut-wrapper" v-show="!query">
+        <scroll class="shortcut" ref="shortcut" :data="shortcut">
           <div>
             <div class="hot-key">
               <h1 class="title">热门搜索</h1>
@@ -14,11 +14,20 @@
                 </li>
               </ul>
             </div>
+            <div class="search-history" v-show="searchHistory.length">
+            <h1 class="title">
+              <span class="text">搜索历史</span>
+              <span class="clear">
+                <i class="icon-clear"></i>
+              </span>
+            </h1>
+            <search-list :searches="searchHistory"></search-list>
           </div>
-        </div>
+          </div>
+        </scroll>
       </div>
-      <div class="search-result" v-show="query" >
-          <suggest @listScroll="blurInput" :query="query" ></suggest>
+      <div ref="searchResult" class="search-result" v-show="query" >
+          <suggest ref="suggest" @select="saveSearch" @listScroll="blurInput" :query="query" ></suggest>
       </div>
       <router-view></router-view><!--此处是一个2级路由  当点击检索列表时就跳转到此路由-->
   </div>
@@ -29,8 +38,14 @@ import SearchBox from '../../base/search-box/search-box'
 import {getHotKey} from '../../api/search'
 import {ERR_OK} from '../../api/config'
 import Suggest from '../../components/suggest/suggest'
+import {mapActions, mapGetters} from 'vuex'
+
+import SearchList from '../../base/search-list/search-list'
+import {playlistMixin} from '../../common/js/mixin'
+import Scroll from '../../base/scroll/scroll'
 export default {
   name: 'search',
+  mixins: [playlistMixin],
   created() {
     this._getHotKey()
   },
@@ -40,7 +55,22 @@ export default {
       query: ''
     }
   },
+  computed: {
+    ...mapGetters([
+      'searchHistory'
+    ]),
+    shortcut() {
+      return this.hotKet.concat(this.searchHistory)
+    }
+  },
   methods: {// 此处是点击热门搜索value值会出现在search框内
+    handlePlaylist(playList) {
+      const bottom = playList.length > 0 ? '60px' : ''
+      this.$refs.shortcutWrapper.style.bottom = bottom
+      this.$refs.shortcut.refresh()
+      this.$refs.searchResult.style.bottom = bottom
+      this.$refs.suggest.refresh()
+    },
     addQuery(query) {
       this.$refs.searchBox.setQuery(query)
     },
@@ -57,11 +87,19 @@ export default {
     },
     blurInput() {
       this.$refs.searchBox.blur()
-    }
+    },
+    saveSearch() {
+      this.saveSearchHistory(this.query)
+    },
+    ...mapActions([
+      'saveSearchHistory'
+    ])
   },
   components: {
     SearchBox,
-    Suggest
+    Suggest,
+    SearchList,
+    Scroll
   }
 }
 </script>
